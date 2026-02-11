@@ -2,9 +2,13 @@
 
 #include <LovyanGFX.hpp>
 
+#include "rootmaker/rootmaker.h"
+
 enum Ryzobee_board_t {
     RYZOBEE_ROOTMAKER, // RootMaker
 };
+
+#if 0
 
 typedef struct {
 /************************************
@@ -78,12 +82,17 @@ typedef struct {
 
 } Ryzobee_board_pin_t;
 
+#endif
+
 class Ryzobee : public lgfx::LGFX_Device {
-    Ryzobee_board_t _board;
   
   public:
+
+    RootMaker rootmaker;
+
+    Ryzobee_board_t _board;
     Ryzobee(Ryzobee_board_t board);
-    Ryzobee_board_pin_t pins;
+    // Ryzobee_board_pin_t pins;
     bool init_impl(bool use_reset, bool use_clear);
 };
   

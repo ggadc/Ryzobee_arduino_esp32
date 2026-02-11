@@ -1,9 +1,8 @@
 #include "boards.h"
-#include "board_pin.h"
+#include "rootmaker/rootmaker_pin.h"
 
 using namespace lgfx::v1;
 
-Panel_Device* panel_load_from_rootmaker(Ryzobee_board_pin_t* pins);
 
 Ryzobee::Ryzobee(Ryzobee_board_t board) {
     _board = board;
@@ -11,17 +10,23 @@ Ryzobee::Ryzobee(Ryzobee_board_t board) {
 }
 
 bool Ryzobee::init_impl(bool use_reset, bool use_clear) {
-    Panel_Device* panel = nullptr;
+    Panel_Device* panel_ptr = nullptr;
     switch (_board) {
-      case RYZOBEE_ROOTMAKER: panel = panel_load_from_rootmaker(&pins); break;
-      default: break;
+      case RYZOBEE_ROOTMAKER: {
+        rootmaker.begin(true, true, true, true);
+        panel_ptr = rootmaker.lcd.panel();
+        break;
+      }
+      default: {
+        break;
+      }
     }
 
-    if (panel == nullptr) {
+    if (panel_ptr == nullptr) {
       assert(0);
     }
 
-    setPanel(panel);
+    setPanel(panel_ptr);
     return LGFX_Device::init_impl(false, use_clear);
 }
 
