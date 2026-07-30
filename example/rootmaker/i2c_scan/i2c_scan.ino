@@ -1,3 +1,5 @@
+#define BOARD_RYZOBEE_ROOTMAKER (1)
+
 #include <Wire.h>
 #include "Ryzobee.h"
 

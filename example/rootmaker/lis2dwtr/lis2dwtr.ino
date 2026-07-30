@@ -1,6 +1,6 @@
-#include "Ryzobee.h"
-
 #define BOARD_RYZOBEE_ROOTMAKER (1)
+
+#include "Ryzobee.h"
 
 Ryzobee board;
 

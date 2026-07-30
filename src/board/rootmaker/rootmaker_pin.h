@@ -67,17 +67,41 @@ enum Rootmaker_RsPort_t {
 #define F_BUS11  12
 #define F_BUS12  11
 #define F_BUS13  10
-#define F_BUS14  09
-#define F_BUS15  08
-#define F_BUS16  07
-#define F_BUS17  06
-#define F_BUS18  05
-#define F_BUS19  04
-#define F_BUS20  03
-#define F_BUS21  02
-#define F_BUS22  01
+#define F_BUS14  9
+#define F_BUS15  8
+#define F_BUS16  7
+#define F_BUS17  6
+#define F_BUS18  5
+#define F_BUS19  4
+#define F_BUS20  3
+#define F_BUS21  2
+#define F_BUS22  1
 #define F_BUS23  BOADR_SDA
 #define F_BUS24  BOADR_SCL
+
+// #define F_BUS7   45
+// #define F_BUS8   41
+// #define F_BUS9   40
+// #define F_BUS10  35
+// #define F_BUS11  33
+// #define F_BUS12  39
+// #define F_BUS13  38
+// #define F_BUS14  37
+// #define F_BUS15  36
+// #define F_BUS16  34
+// #define F_BUS17  21
+
+// #define F_BUS24  20
+// #define F_BUS25  19
+// #define F_BUS26  18
+// #define F_BUS27  17
+// #define F_BUS28  16
+// #define F_BUS29  15
+// #define F_BUS30  14
+// #define F_BUS31  13
+// #define F_BUS32  48
+// #define F_BUS33  47
+// #define F_BUS34  46
 
 // S_BUS
 #define S_BUS1   48
