@@ -2,14 +2,16 @@
 
 [English](./README.md)
 
-本例程演示如何在 Ryzobee 开发板上使用 KEYW 扩展模块（按键 + LED）。模块通过 `begin(board, port)` 自动解析引脚，按键输入采用内部上拉、下降沿中断加软件去抖，LED 支持开关控制和 PWM 亮度调节。模块与具体开发板解耦，同一份代码可用于 Rootmaker 及后续新型号。
+本例程演示如何在 Ryzobee 开发板上使用 KEYW 扩展模块（按键 + LED）。Yoke 库暂未提供 `Yoke_keyw` 类，因此本例程通过开发板的端口数据向量直接访问 RS 端口引脚。
+
+SDA → 按键输入（低电平有效，内部上拉），SCL → LED 输出（支持 PWM，`analogWrite`）。
 
 # 功能说明
 
-- 通过 `begin(board, port)` 在任意 Ryzobee 开发板扩展口上初始化 KEYW
-- 检测按键按下并做软件去抖（30ms）
-- 每次按下切换 LED 亮灭状态
-- 支持数字开关和 PWM 亮度两种控制模式
+- 从端口数据解析引脚：`board.maker.useport("rs_portN")`
+- 下降沿中断 + 30ms 软件去抖
+- 每次按下切换 LED 亮灭
+- 可通过 `LED_CONTROL` 宏切换数字开关 / PWM 亮度模式
 
 # 硬件连接
 
@@ -18,7 +20,7 @@
 | SDA    | 按键输入  |
 | SCL    | LED 输出  |
 
-以 Rootmaker 为例，各端口对应的 GPIO：
+Rootmaker 端口 GPIO 映射：
 
 | 端口   | SDA (按键) | SCL (LED) |
 |--------|-----------|-----------|
@@ -29,38 +31,35 @@
 
 # 依赖库
 
-无需额外安装第三方 Arduino 依赖库。
+| 名称 | 说明 |
+|------|------|
+| [Ryzobee](https://github.com/ggadc/Ryzobee_arduino_lib) | 开发板支持（Rootmaker） |
 
-# 运行说明
+无需 Yoke 库（直接操作 GPIO）。
 
-- 打开 `examples/ext_periph/Yoke_KEYW/Yoke_KEYW.ino`
-- 编译并烧录到 Rootmaker 开发板
-- 打开串口监视器，波特率 115200
-- 按下按键，LED 应切换亮灭
-
-# 多端口使用
-
-每个端口创建一个独立实例，可同时使用多个 KEYW 模块：
+# 快速开始
 
 ```cpp
+#define BOARD_RYZOBEE_ROOTMAKER (1)
+
 #include "Ryzobee.h"
 
-Yoke_keyw k2, k4;
+Ryzobee board;
+std::vector<uint8_t>* keywPort = nullptr;
 
 void setup() {
-    board.rootmaker.begin();
-    k2.begin(RYZOBEE_ROOTMAKER, ROOTMAKER_RS_PORT2);
-    k4.begin(RYZOBEE_ROOTMAKER, ROOTMAKER_RS_PORT4);
-}
-
-void loop() {
-    if (k2.readKeyState()) k2.setLedBrightness(128);
-    if (k4.readKeyState()) k4.setLedState(true);
+    board.maker.begin();
+    keywPort = board.maker.useport("rs_port1");
+    int keyPin = keywPort->at(PORT_PIN_START);      // SDA
+    int ledPin = keywPort->at(PORT_PIN_START + 1);  // SCL
+    pinMode(keyPin, INPUT_PULLUP);
+    pinMode(ledPin, OUTPUT);
+    attachInterrupt(digitalPinToInterrupt(keyPin), onKeyPress, FALLING);
 }
 ```
 
 # 说明
 
-- 按键为低电平有效，已启用内部上拉电阻，无需外接上拉
-- PWM 模式（`LED_CONTROL = 1`）使用 `analogWrite`，需确保对应的 SCL 引脚支持 PWM
-- 若按键无响应，请检查接线和端口选择是否正确
+- 按键低电平有效，已启用内部上拉，无需外接上拉电阻
+- PWM 模式（`LED_CONTROL=1`）使用 `analogWrite`，需确保 SCL 引脚支持 PWM
+- Yoke 库后续可能会加入专用的 `Yoke_keyw` 类

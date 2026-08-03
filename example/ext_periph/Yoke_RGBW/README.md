@@ -2,21 +2,24 @@
 
 [中文](./README_CN.md)
 
-This example demonstrates how to control an RGBW NeoPixel LED strip using the RGBW expansion module on a Ryzobee board. It cycles through per-pixel and all-pixel color patterns including packed 32-bit colors and timed transitions.
+This example demonstrates how to control SK6812 RGBW NeoPixel LEDs using the **[Yoke](https://github.com/ggadc/Yoke_arduino_lib)** library's `Yoke_rgbw` class. It uses the ESP32 RMT peripheral (new driver, ESP-IDF v5.x) to drive up to N LEDs on a single RS port data pin (SDA).
 
 # Features
 
-- Initialize RGBW on any board expansion port via `begin(board, port, brt, num)`
-- Configurable number of LEDs and brightness
-- Per-pixel color control (RGBW components or packed 32-bit)
-- All-pixel fill with or without delay
-- Looping color demo
+- Configure LED count at runtime: `rgbw.setNumLeds(N)`
+- Per-pixel color: `rgbw.setPixelColor(index, r, g, b, w)` or packed 32-bit `setPixelColor(index, 0xWWRRGGBB)`
+- All-pixel fill: `rgbw.setColor(r, g, b, w)` (backward compatible)
+- Explicit transmit: `rgbw.show()` — call after setting colors to push data to the strip
+- Chasing effects, brightness sweeps, mixed colors
 
-# Hardware Connection
+# Hardware
 
-| Rootmaker Port | NeoPixel Strip |
-|----------------|----------------|
-| SDA            | Data line (DIN)|
+| Port | NeoPixel Strip |
+|------|----------------|
+| SDA  | Data line (DIN)|
+| SCL  | Unused         |
+
+Rootmaker GPIO mapping:
 
 | Port  | SDA (DIN) |
 |-------|-----------|
@@ -27,41 +30,47 @@ This example demonstrates how to control an RGBW NeoPixel LED strip using the RG
 
 # Dependencies
 
-| Name | Version | Description |
-|---|---|---|
-| [Adafruit_NeoPixel](https://github.com/adafruit/Adafruit_NeoPixel) | >= v1.15.3 | Arduino library for single-wire RGB/RGBW LEDs |
+| Library | Description |
+|---------|-------------|
+| [Ryzobee](https://github.com/ggadc/Ryzobee_arduino_lib) | Board support (Rootmaker) |
+| [Yoke](https://github.com/ggadc/Yoke_arduino_lib) | Peripheral drivers (RMT-based, no Adafruit_NeoPixel needed) |
 
-# Usage
-
-- Open `examples/ext_periph/Yoke_RGBW/Yoke_RGBW.ino`
-- Build and upload
-- The LED strip will cycle through various color patterns
-
-# Multi-Port Usage
-
-Create one instance per port:
+# Quick Start
 
 ```cpp
-#include "Ryzobee.h"
+#define BOARD_RYZOBEE_ROOTMAKER (1)
 
-Yoke_rgbw strip1, strip2;
+#include "Ryzobee.h"
+#include <ryzobee_yoke.hpp>
+#include <yoke_rgbw/yoke_rgbw.hpp>
+
+Ryzobee board;
+Yoke_rgbw rgbw;
 
 void setup() {
-    board.rootmaker.begin();
-    strip1.begin(RYZOBEE_ROOTMAKER, ROOTMAKER_RS_PORT1, 50, 3);
-    strip2.begin(RYZOBEE_ROOTMAKER, ROOTMAKER_RS_PORT3, 100, 5);
+    board.maker.begin();
+    rgbw.begin(board.maker.useport("rs_port4"));
+    rgbw.setNumLeds(3);                          // 3 NeoPixels
 }
 
 void loop() {
-    strip1.setColor(255, 0, 0, 0);   // PORT1: red
-    strip2.setColor(0, 0, 255, 0);   // PORT3: blue
+    rgbw.setPixelColor(0, 255, 0, 0, 0);        // LED0: red
+    rgbw.setPixelColor(1, 0, 255, 0, 0);        // LED1: green
+    rgbw.setPixelColor(2, 0, 0, 255, 0);        // LED2: blue
+    rgbw.show();
+    delay(1000);
+
+    rgbw.setColor(255, 255, 255, 0);             // all white
+    rgbw.show();
     delay(500);
-    strip1.setColor(0);
-    strip2.setColor(0);
-    delay(500);
+    rgbw.setColor(0); rgbw.show();               // all off
 }
 ```
 
 # Notes
 
-- The NeoPixel data line expects 3.3V logic; a level shifter may be needed for 5V strips
+- `Yoke_rgbw` uses the ESP-IDF v5.x new RMT driver (`driver/rmt_tx.h`), compatible with Arduino ESP32 3.x
+- No third-party libraries required (replaces Adafruit_NeoPixel dependency)
+- Timing: 20MHz RMT resolution (50ns/tick), tuned for SK6812 RGBW spec
+- Data order: GRBW, MSB first — matches SK6812 RGBW NeoPixels
+- LED 0 is closest to the MCU; data propagates from LED0 → LED1 → ...

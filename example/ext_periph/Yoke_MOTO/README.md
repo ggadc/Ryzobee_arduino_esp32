@@ -2,23 +2,23 @@
 
 [中文](./README_CN.md)
 
-This example demonstrates how to drive a DC motor using the MOTO expansion module on a Ryzobee board. The module controls an H-bridge motor driver via two GPIO pins (IN1/IN2), supporting forward, reverse, stop, and PWM speed control. The module is decoupled from any specific board — the same code works on Rootmaker and future Ryzobee models.
+This example demonstrates how to drive a DC motor using the MOTO expansion module on a Ryzobee board. It uses the **[Yoke](https://github.com/ggadc/Yoke_arduino_lib)** library's `Yoke_moto` class, which controls an H-bridge motor driver via MCPWM on two RS port pins (IN1/IN2).
 
 # Features
 
-- Initialize MOTO on any Ryzobee board expansion port via `begin(board, port)`
-- Forward / reverse / stop control
-- Independent PWM speed and direction control
-- Ramp-up / ramp-down demonstration
+- Initialize via `moto.begin(board.maker.useport("rs_portN"))`
+- Forward / reverse / stop: `setmoto(Yoke_moto::DIR_FORWARD, speed)` (speed 0–100)
+- Speed ramping and adjustable PWM mapping via `setSpeedMap(min, max)`
+- `groundUnusedPorts()` helper prevents floating H-bridge inputs on unused ports
 
-# Hardware Connection
+# Hardware
 
 | Expansion Port | Motor Driver |
 |----------------|-------------|
 | SDA            | IN1         |
 | SCL            | IN2         |
 
-Rootmaker port-to-GPIO mapping:
+Rootmaker GPIO mapping:
 
 | Port  | SDA (IN1) | SCL (IN2) |
 |-------|-----------|-----------|
@@ -29,41 +29,61 @@ Rootmaker port-to-GPIO mapping:
 
 # Dependencies
 
-No additional third-party libraries are required.
+| Library | Description |
+|---------|-------------|
+| [Ryzobee](https://github.com/ggadc/Ryzobee_arduino_lib) | Board support (Rootmaker) |
+| [Yoke](https://github.com/ggadc/Yoke_arduino_lib) | Peripheral drivers |
 
-# Usage
-
-- Open `examples/ext_periph/Yoke_MOTO/Yoke_MOTO.ino`
-- Build and upload to a Rootmaker board
-- The motor will cycle through forward, reverse, and speed ramps
-
-# Multi-Port Usage
-
-Create one independent instance per port:
+# Quick Start
 
 ```cpp
-#include "Ryzobee.h"
+#define BOARD_RYZOBEE_ROOTMAKER (1)
 
-Yoke_moto motorA, motorB;
+#include "Ryzobee.h"
+#include <ryzobee_yoke.hpp>
+#include <yoke_moto/yoke_moto.hpp>
+
+Ryzobee board;
+Yoke_moto moto;
 
 void setup() {
-    board.rootmaker.begin();
-    motorA.begin(RYZOBEE_ROOTMAKER, ROOTMAKER_RS_PORT2);
-    motorB.begin(RYZOBEE_ROOTMAKER, ROOTMAKER_RS_PORT3);
+    board.maker.begin();
+    moto.begin(board.maker.useport("rs_port4"));
 }
 
 void loop() {
-    motorA.motorForward(200);
-    motorB.motorBackward(150);
+    moto.setmoto(Yoke_moto::DIR_FORWARD, 100);  delay(2000);
+    moto.setmoto(Yoke_moto::DIR_FORWARD, 0);    delay(1000);
+}
+```
+
+# Multi-Port Usage
+
+```cpp
+#define BOARD_RYZOBEE_ROOTMAKER (1)
+
+#include "Ryzobee.h"
+#include <ryzobee_yoke.hpp>
+#include <yoke_moto/yoke_moto.hpp>
+
+Ryzobee board;
+Yoke_moto motorA, motorB;
+
+void setup() {
+    board.maker.begin();
+    motorA.begin(board.maker.useport("rs_port2"));
+    motorB.begin(board.maker.useport("rs_port3"));
+}
+
+void loop() {
+    motorA.setmoto(Yoke_moto::DIR_FORWARD, 80);
+    motorB.setmoto(Yoke_moto::DIR_REVERSE, 60);
     delay(1000);
-    motorA.motorStop();
-    motorB.motorStop();
-    delay(500);
 }
 ```
 
 # Notes
 
-- Ensure the motor driver and motor are properly powered
-- `motorStop()` sets both IN1 and IN2 LOW (coast stop); for brake stop, set both HIGH
-- `setSpeed()` only changes the PWM duty cycle for the current direction; it does not change direction
+- Speed range is 0–100 (maps to 0–255 PWM duty by default)
+- Unconfigured RS port pins float; use `groundUnusedPorts()` to pull them LOW
+- Multiple `Yoke_moto` instances use independent MCPWM timers

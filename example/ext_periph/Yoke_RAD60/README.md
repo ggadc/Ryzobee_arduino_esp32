@@ -2,24 +2,28 @@
 
 [中文](./README_CN.md)
 
-This example demonstrates how to use the AT6010 (RAD60) mmWave radar sensor on a Ryzobee board via UART. It applies default motion/breath detection parameters, and continuously reports multi-target detection data (distance, angle, velocity, ID). Communication is fixed at 115200 baud.
+This example demonstrates the AT6010 (RAD60) mmWave radar sensor on a Ryzobee board using the **[Yoke](https://github.com/ggadc/Yoke_arduino_lib)** library's `Yoke_rad60` class. Communication is via UART at 115200 baud on an RS expansion port (SDA=TX, SCL=RX).
 
 # Features
 
-- Initialize RAD60 on any board expansion port via `begin(board, port, uart_num, baud)`
-- Wake up ULP (ultra-low-power) radar if needed
-- Apply default detection configuration (motion + breath)
-- Real-time multi-target tracking (up to 2 targets)
-- Vacancy / communication health monitoring
+- Initialize radar on any RS port: `radar.begin(board.maker.useport("rs_portN"))`
+- UART specified via constructor: `Yoke_rad60 radar(UART_NUM_1, 115200)`
+- Wake ULP radar: `radar.enterCommunicationMode(true)`
+- Apply default detection config (motion + breath): `radar.applyDefaultConfig()`
+- Real-time multi-target tracking (up to 2 targets): `radar.update()`
+- Distance, angle, velocity, and ID per target
+- Vacancy / communication health monitoring: `isDetected()`, `isConnected()`
 
-# Hardware Connection
+# Hardware
 
-| Rootmaker Port | RAD60 Module |
-|----------------|-------------|
-| SDA            | TX          |
-| SCL            | RX          |
-| VCC            | 3.3V        |
-| GND            | GND         |
+| RS Port | RAD60 Module |
+|---------|-------------|
+| SDA     | TX          |
+| SCL     | RX          |
+| VCC     | 3.3V        |
+| GND     | GND         |
+
+Rootmaker GPIO mapping:
 
 | Port  | SDA (TX)  | SCL (RX)  |
 |-------|-----------|-----------|
@@ -30,38 +34,37 @@ This example demonstrates how to use the AT6010 (RAD60) mmWave radar sensor on a
 
 # Dependencies
 
-No additional third-party libraries are required. The RAD60 module uses the ESP-IDF native UART driver, matching the IDF `at6010` implementation.
+| Library | Description |
+|---------|-------------|
+| [Ryzobee](https://github.com/ggadc/Ryzobee_arduino_lib) | Board support (Rootmaker) |
+| [Yoke](https://github.com/ggadc/Yoke_arduino_lib) | Peripheral drivers (UART-based, no third-party libs) |
 
-# Usage
-
-- Open `examples/ext_periph/Yoke_RAD60/Yoke_RAD60.ino`
-- Build and upload
-- Open the serial monitor at 115200 baud
-- After startup (~3s), walk in front of the radar — target info will appear
-
-# Multi-Port Usage
-
-Create one instance per port (each radar needs its own UART):
+# Quick Start
 
 ```cpp
-#include "Ryzobee.h"
+#define BOARD_RYZOBEE_ROOTMAKER (1)
 
-Yoke_rad60 radarA, radarB;
+#include "Ryzobee.h"
+#include <ryzobee_yoke.hpp>
+#include <yoke_rad60/yoke_rad60.hpp>
+
+Ryzobee board;
+Yoke_rad60 radar(UART_NUM_1, 115200);
 
 void setup() {
-    board.rootmaker.begin();
-    radarA.begin(RYZOBEE_ROOTMAKER, ROOTMAKER_RS_PORT1, UART_NUM_2, 115200);
-    radarB.begin(RYZOBEE_ROOTMAKER, ROOTMAKER_RS_PORT3, UART_NUM_1, 115200);
+    board.maker.begin();
+    radar.begin(board.maker.useport("rs_port4"));
+    delay(2000);                                 // startup delay
+    radar.enterCommunicationMode(true);
+    radar.applyDefaultConfig();
 }
 
 void loop() {
-    radarA.update();
-    radarB.update();
-    if (radarA.isDetected()) {
-        Serial.printf("PORT1: %d cm\n", radarA.getTargetDistance(0));
-    }
-    if (radarB.isDetected()) {
-        Serial.printf("PORT3: %d cm\n", radarB.getTargetDistance(0));
+    radar.update();
+    if (radar.isDetected()) {
+        Serial.printf("Targets: %d, dist: %d cm\n",
+                      radar.getTargetCount(),
+                      radar.getTargetDistance(0));
     }
     delay(50);
 }
@@ -69,6 +72,7 @@ void loop() {
 
 # Notes
 
-- The RAD60 module must be powered at 3.3V with sufficient current
-- Each RAD60 requires its own UART (UART_NUM_1 = Serial1, UART_NUM_2 = Serial2)
+- Each RAD60 requires its own UART (UART_NUM_1 or UART_NUM_2)
+- Must wait ~2s after power-on before sending commands
 - Communication baud rate is fixed at 115200
+- Protocol: 0x58 send / 0x59 response / 0x5A auto-report frames

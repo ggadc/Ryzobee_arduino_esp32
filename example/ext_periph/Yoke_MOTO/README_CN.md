@@ -2,14 +2,14 @@
 
 [English](./README.md)
 
-本例程演示如何在 Ryzobee 开发板上使用 MOTO 扩展模块驱动直流电机。模块通过两个 GPIO（IN1/IN2）控制 H 桥电机驱动芯片，支持正转、反转、停止和 PWM 调速。模块与具体开发板解耦，同一份代码可用于 Rootmaker 及后续新型号。
+本例程演示如何使用 **[Yoke](https://github.com/ggadc/Yoke_arduino_lib)** 库的 `Yoke_moto` 类在 Ryzobee 开发板上驱动直流电机。模块通过 MCPWM 控制 RS 端口两个引脚（IN1/IN2）上的 H 桥电机驱动芯片。
 
 # 功能说明
 
-- 通过 `begin(board, port)` 在任意 Ryzobee 开发板扩展口上初始化 MOTO
-- 正转 / 反转 / 停止控制
-- 独立的 PWM 速度和方向控制
-- 加减速演示（ramp-up / ramp-down）
+- 初始化：`moto.begin(board.maker.useport("rs_portN"))`
+- 正转 / 反转 / 停止：`setmoto(Yoke_moto::DIR_FORWARD, speed)`（speed 范围 0–100）
+- 速度映射可调：`setSpeedMap(min, max)`
+- `groundUnusedPorts()` 防止未用端口浮空导致 H 桥误触发
 
 # 硬件连接
 
@@ -18,7 +18,7 @@
 | SDA    | IN1     |
 | SCL    | IN2     |
 
-以 Rootmaker 为例，各端口对应的 GPIO：
+Rootmaker 端口 GPIO 映射：
 
 | 端口   | SDA (IN1) | SCL (IN2) |
 |--------|-----------|-----------|
@@ -29,41 +29,61 @@
 
 # 依赖库
 
-无需额外安装第三方 Arduino 依赖库。
+| 名称 | 说明 |
+|------|------|
+| [Ryzobee](https://github.com/ggadc/Ryzobee_arduino_lib) | 开发板支持（Rootmaker） |
+| [Yoke](https://github.com/ggadc/Yoke_arduino_lib) | 外设驱动 |
 
-# 运行说明
-
-- 打开 `examples/ext_periph/Yoke_MOTO/Yoke_MOTO.ino`
-- 编译并烧录到 Rootmaker 开发板
-- 电机会循环执行正转、反转和加减速动作
-
-# 多端口使用
-
-每个端口创建一个独立实例，可同时驱动多个电机：
+# 快速开始
 
 ```cpp
-#include "Ryzobee.h"
+#define BOARD_RYZOBEE_ROOTMAKER (1)
 
-Yoke_moto motorA, motorB;
+#include "Ryzobee.h"
+#include <ryzobee_yoke.hpp>
+#include <yoke_moto/yoke_moto.hpp>
+
+Ryzobee board;
+Yoke_moto moto;
 
 void setup() {
-    board.rootmaker.begin();
-    motorA.begin(RYZOBEE_ROOTMAKER, ROOTMAKER_RS_PORT2);
-    motorB.begin(RYZOBEE_ROOTMAKER, ROOTMAKER_RS_PORT3);
+    board.maker.begin();
+    moto.begin(board.maker.useport("rs_port4"));
 }
 
 void loop() {
-    motorA.motorForward(200);
-    motorB.motorBackward(150);
+    moto.setmoto(Yoke_moto::DIR_FORWARD, 100);  delay(2000);
+    moto.setmoto(Yoke_moto::DIR_FORWARD, 0);    delay(1000);
+}
+```
+
+# 多端口使用
+
+```cpp
+#define BOARD_RYZOBEE_ROOTMAKER (1)
+
+#include "Ryzobee.h"
+#include <ryzobee_yoke.hpp>
+#include <yoke_moto/yoke_moto.hpp>
+
+Ryzobee board;
+Yoke_moto motorA, motorB;
+
+void setup() {
+    board.maker.begin();
+    motorA.begin(board.maker.useport("rs_port2"));
+    motorB.begin(board.maker.useport("rs_port3"));
+}
+
+void loop() {
+    motorA.setmoto(Yoke_moto::DIR_FORWARD, 80);
+    motorB.setmoto(Yoke_moto::DIR_REVERSE, 60);
     delay(1000);
-    motorA.motorStop();
-    motorB.motorStop();
-    delay(500);
 }
 ```
 
 # 说明
 
-- 确保电机驱动板和电机已正确供电
-- `motorStop()` 将 IN1/IN2 同时置低（滑行停止）；如需刹车停止，改为同时置高
-- `setSpeed()` 仅改变当前方向的 PWM 占空比，不改变方向
+- 速度范围 0–100（默认映射为 0–255 PWM 占空比）
+- 未配置的 RS 端口引脚处于浮空态，建议调用 `groundUnusedPorts()` 主动拉低
+- 多个 `Yoke_moto` 实例使用独立的 MCPWM 定时器，互不冲突

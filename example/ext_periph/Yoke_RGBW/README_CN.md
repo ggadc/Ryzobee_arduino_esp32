@@ -2,15 +2,15 @@
 
 [English](./README.md)
 
-本例程演示如何在 Ryzobee 开发板上使用 RGBW 扩展模块控制 NeoPixel RGBW 灯带。模块通过 `begin(board, port, brightness, num_leds)` 自动解析引脚并初始化，循环展示逐像素和全灯色彩填充，包括 RGBW 分量、32 位合成色和延时过渡效果。模块与具体开发板解耦，同一份代码可用于 Rootmaker 及后续新型号。
+本例程演示如何使用 **[Yoke](https://github.com/ggadc/Yoke_arduino_lib)** 库的 `Yoke_rgbw` 类控制 SK6812 RGBW NeoPixel 灯珠。基于 ESP32 RMT 外设（新版驱动，ESP-IDF v5.x），通过 RS 端口的 SDA 引脚驱动多颗灯珠。
 
 # 功能说明
 
-- 通过 `begin(board, port, brt, num)` 在任意 Ryzobee 开发板扩展口上初始化 RGBW
-- 可配置灯珠数量和亮度
-- 逐像素独立设色（RGBW 分量或 32 位合成色）
-- 全灯统一设色，支持加延时过渡
-- 循环色彩演示
+- 运行时设置灯珠数量：`rgbw.setNumLeds(N)`
+- 逐像素设色：`rgbw.setPixelColor(索引, R, G, B, W)` 或 32 位合成色 `setPixelColor(索引, 0xWWRRGGBB)`
+- 全灯同色：`rgbw.setColor(r, g, b, w)`（向后兼容旧 API）
+- 显式发送：`rgbw.show()` — 调色后调用一次，把所有灯珠数据发出
+- 追逐效果、亮度渐变、混合色
 
 # 硬件连接
 
@@ -19,7 +19,7 @@
 | SDA    | 数据线 (DIN) |
 | SCL    | 未使用       |
 
-以 Rootmaker 为例，各端口对应的 GPIO：
+Rootmaker 端口 GPIO 映射：
 
 | 端口   | SDA (DIN) |
 |--------|-----------|
@@ -30,46 +30,47 @@
 
 # 依赖库
 
-请先在 Arduino IDE 中安装以下库：
+| 名称 | 说明 |
+|------|------|
+| [Ryzobee](https://github.com/ggadc/Ryzobee_arduino_lib) | 开发板支持（Rootmaker） |
+| [Yoke](https://github.com/ggadc/Yoke_arduino_lib) | 外设驱动（基于 RMT，无需 Adafruit_NeoPixel） |
 
-| 名称 | 版本 | 说明 |
-|---|---|---|
-| [Adafruit_NeoPixel](https://github.com/adafruit/Adafruit_NeoPixel) | >= v1.15.3 | 用于控制单总线 RGB / RGBW LED 灯带 |
-
-# 运行说明
-
-- 打开 `examples/ext_periph/Yoke_RGBW/Yoke_RGBW.ino`
-- 如需调整亮度和灯珠数量，修改 `begin()` 中的参数
-- 编译并烧录到 Rootmaker 开发板
-- 灯带会循环展示多种色彩模式
-
-# 多端口使用
-
-每个端口创建一个独立实例：
+# 快速开始
 
 ```cpp
-#include "Ryzobee.h"
+#define BOARD_RYZOBEE_ROOTMAKER (1)
 
-Yoke_rgbw strip1, strip2;
+#include "Ryzobee.h"
+#include <ryzobee_yoke.hpp>
+#include <yoke_rgbw/yoke_rgbw.hpp>
+
+Ryzobee board;
+Yoke_rgbw rgbw;
 
 void setup() {
-    board.rootmaker.begin();
-    strip1.begin(RYZOBEE_ROOTMAKER, ROOTMAKER_RS_PORT1, 50, 3);
-    strip2.begin(RYZOBEE_ROOTMAKER, ROOTMAKER_RS_PORT3, 100, 5);
+    board.maker.begin();
+    rgbw.begin(board.maker.useport("rs_port4"));
+    rgbw.setNumLeds(3);                          // 3 颗灯珠
 }
 
 void loop() {
-    strip1.setColor(255, 0, 0, 0);   // PORT1: 红色
-    strip2.setColor(0, 0, 255, 0);   // PORT3: 蓝色
+    rgbw.setPixelColor(0, 255, 0, 0, 0);        // LED0: 红色
+    rgbw.setPixelColor(1, 0, 255, 0, 0);        // LED1: 绿色
+    rgbw.setPixelColor(2, 0, 0, 255, 0);        // LED2: 蓝色
+    rgbw.show();
+    delay(1000);
+
+    rgbw.setColor(255, 255, 255, 0);             // 全白
+    rgbw.show();
     delay(500);
-    strip1.setColor(0);
-    strip2.setColor(0);
-    delay(500);
+    rgbw.setColor(0); rgbw.show();               // 全灭
 }
 ```
 
 # 说明
 
-- NeoPixel 数据线为 3.3V 电平，5V 灯带可能需要加电平转换模块
-- RGBW 模块仅使用 SDA 引脚（作为数据线），SCL 引脚保留不使用
-- 可同时使用多个 RGBW 模块：每个端口创建一个 `Yoke_rgbw` 实例并调用 `begin()`
+- 使用 ESP-IDF v5.x 新版 RMT 驱动（`driver/rmt_tx.h`），兼容 Arduino ESP32 3.x
+- 无需第三方 LED 库（替代 Adafruit_NeoPixel 依赖）
+- 时序：20MHz RMT 分辨率（50ns/tick），已针对 SK6812 RGBW 规范调优
+- 数据顺序：GRBW，高位先发 — 匹配 SK6812 RGBW 灯珠
+- LED0 离 MCU 最近，数据依次向后传递
