@@ -27,7 +27,7 @@ public:
         ports["rs_port3"] = {PORT_TYPE_RS, false, false, 2, PORT3_PIN1, PORT3_PIN2};
         ports["rs_port4"] = {PORT_TYPE_RS, false, false, 2, PORT4_PIN1, PORT4_PIN2};
         ports["s_bus"] = {PORT_TYPE_S_BUS, false, false, 14, S_BUS1, S_BUS2, S_BUS3, S_BUS4, S_BUS5, S_BUS6, S_BUS7, S_BUS8, S_BUS9, S_BUS10, S_BUS11, S_BUS12, S_BUS13, S_BUS14};
-        ports["f_bus"] = {PORT_TYPE_F_BUS, false, false, 16, F_BUS9, F_BUS10, F_BUS11, F_BUS12, F_BUS13, F_BUS14, F_BUS15, F_BUS16, F_BUS17, F_BUS24};
+        ports["f_bus"] = {PORT_TYPE_F_BUS, false, false, 16, F_BUS9, F_BUS10, F_BUS11, F_BUS12, F_BUS13, F_BUS14, F_BUS15, F_BUS16, F_BUS17, F_BUS18, F_BUS19, F_BUS20, F_BUS21, F_BUS22, F_BUS23, F_BUS24};
         
         _i2c_mutex = xSemaphoreCreateMutex();
         if (_i2c_mutex == nullptr) {
