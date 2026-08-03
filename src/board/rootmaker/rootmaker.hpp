@@ -13,8 +13,9 @@
 
 #include "peripherals/ryzobee_led.hpp"
 #include "peripherals/ryzobee_lis2dwtr.hpp"
-#include "peripherals/Rootmaker_bat.hpp"
+#include "peripherals/rootmaker_bat.hpp"
 #include "peripherals/ryzobee_btn.hpp"
+#include "peripherals/rootmaker_lcd.hpp"
 
 #define SCREEN_WIDTH  240
 
@@ -32,8 +33,13 @@ public:
         if (_i2c_mutex == nullptr) {
             ESP_LOGE("rootmaker", "Failed to create I2C mutex");
         }
+        lcd = new rootmaker_lcd(&_dev_i2c, &_i2c_mutex);
     }
     ~rootmaker() {
+        if (lcd != nullptr) {
+            delete lcd;
+            lcd = nullptr;
+        }
         if (_i2c_mutex != nullptr) {
             vSemaphoreDelete(_i2c_mutex);
             _i2c_mutex = nullptr;
@@ -45,10 +51,14 @@ public:
         bool LEDEnable      = true,
         bool SensorEnable   = true,
         bool ButtonEnable   = true,
-        bool BatteryEnable  = true
+        bool BatteryEnable  = true,
+        bool LCDEnable      = true
     */
-    void begin() override { begin(true, true, true, true);}
     void begin(bool LEDEnable, bool SensorEnable, bool ButtonEnable, bool BatteryEnable) {
+        begin(LEDEnable, SensorEnable, ButtonEnable, BatteryEnable, false);
+    }
+    void begin() override { begin(true, true, true, true, true);}
+    void begin(bool LEDEnable, bool SensorEnable, bool ButtonEnable, bool BatteryEnable, bool LCDEnable) {
         ESP_LOGI("rootmaker", "CPU Freq: %lu Hz", getCpuFrequencyMhz() * 1000000UL);
         ESP_LOGI("rootmaker", "APB Freq: %lu Hz", getApbFrequency());
         if (!_i2c_initialized) {
@@ -68,6 +78,9 @@ public:
             btns.init(true);
             btns.add(BUTN_PIN, 1, DEBOUNCE_MS);
         }
+        if (LCDEnable && lcd != nullptr) {
+            lcd->init();
+        }
     }
     TwoWire& getWire() { return _dev_i2c; }
 public:
@@ -75,6 +88,7 @@ public:
     ryzobee_lis2dwtr    gsensor = ryzobee_lis2dwtr((TwoWire*)&_dev_i2c,(SemaphoreHandle_t*)&_i2c_mutex);
     rootmaker_ec        ec = rootmaker_ec((TwoWire*)&_dev_i2c,(SemaphoreHandle_t*)&_i2c_mutex);
     ryzobee_btn         btns;
+    rootmaker_lcd*      lcd = nullptr;
 
 
 private:

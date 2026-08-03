@@ -17,7 +17,7 @@ This example uses the display and touch APIs provided by this library and does n
 
 # Usage
 
-- Build and upload examples/screen/screen.ino
+- Build and upload example/rootmaker/screen/screen.ino
 - After boot, the screen displays a red square and a short prompt
 - Tap the red square to move it to a new random position
 - Tap elsewhere on the screen to leave a small green touch marker
@@ -25,4 +25,5 @@ This example uses the display and touch APIs provided by this library and does n
 # Notes
 
 - This example only enables the display module; the LED, sensor, button, and battery modules are disabled
+- The sketch uses `board.maker.begin(false, false, false, false, true)` to enable the LCD module explicitly
 - If touch input does not respond or the display looks incorrect, first verify display initialization, touch hardware status, and board configuration

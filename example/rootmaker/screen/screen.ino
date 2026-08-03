@@ -4,20 +4,17 @@
 
 Ryzobee board;
 
-static bool lastPressed = false;
-static uint8_t page = 0;
-static uint32_t lastPrintAt = 0;
+#define CUBE_WIDTH 40
 
-void printPage()
+static long cubeX = (SCREEN_WIDTH - CUBE_WIDTH) / 2;
+static long cubeY = (SCREEN_WIDTH - CUBE_WIDTH) / 2;
+
+static void drawScene()
 {
-    Serial.println();
-    if (page == 0) {
-        Serial.printf("Board: %s\n", board.maker.getBoardName().c_str());
-        Serial.printf("Info: %s\n", board.maker.getBoardInfo().c_str());
-    } else {
-        Serial.println("Port summary:");
-        Serial.print(board.maker.portsInfo().c_str());
-    }
+    board.maker.lcd->clear();
+    board.maker.lcd->fillRect(cubeX, cubeY, CUBE_WIDTH, CUBE_WIDTH, TFT_RED);
+    board.maker.lcd->setTextColor(TFT_WHITE, TFT_BLACK);
+    board.maker.lcd->drawString("Please click the cube", 60, 220);
 }
 
 void setup(void)
@@ -25,34 +22,40 @@ void setup(void)
     Serial.begin(115200);
     delay(200);
 
-    board.maker.begin(true, false, true, false);
+    randomSeed(micros());
 
-    Serial.println();
-    Serial.println("RootMaker legacy screen example");
-    Serial.println("The refactored library no longer exposes the display/touch API.");
-    Serial.println("This compatibility sketch prints board and port information to the serial monitor.");
-    Serial.println("Release the onboard button to switch between pages.");
+    board.maker.begin(false, false, false, false, true);
 
-    printPage();
+    if (board.maker.lcd == nullptr) {
+        Serial.println("LCD is not available");
+        return;
+    }
+
+    board.maker.lcd->setBrightness(255);
+    board.maker.lcd->setTextSize((std::max(board.maker.lcd->width(), board.maker.lcd->height()) + 255) >> 8);
+    drawScene();
+
+    Serial.println("RootMaker LCD touch example");
 }
 
 void loop(void)
 {
-    board.maker.btns.update(0);
-    bool pressed = board.maker.btns[0].isPressed() != 0;
-
-    if (!pressed && lastPressed) {
-        page = (page + 1) % 2;
-        printPage();
+    if (board.maker.lcd == nullptr) {
+        delay(100);
+        return;
     }
 
-    uint32_t now = millis();
-    if (now - lastPrintAt >= 5000) {
-        lastPrintAt = now;
-        printPage();
+    uint16_t x = 0;
+    uint16_t y = 0;
+    if (board.maker.lcd->getTouch(&x, &y)) {
+        if (x >= cubeX && x <= cubeX + CUBE_WIDTH && y >= cubeY && y <= cubeY + CUBE_WIDTH) {
+            cubeX = random(0, SCREEN_WIDTH - CUBE_WIDTH);
+            cubeY = random(0, SCREEN_WIDTH - CUBE_WIDTH);
+            drawScene();
+        } else if (x < SCREEN_WIDTH && y < SCREEN_WIDTH) {
+            board.maker.lcd->fillRect(x, y, 3, 3, TFT_GREEN);
+        }
     }
 
-    lastPressed = pressed;
-    board.maker.led.setHSV((now / 20) % 360, 100, 20);
     delay(10);
 }

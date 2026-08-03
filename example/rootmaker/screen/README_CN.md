@@ -17,7 +17,7 @@
 
 # 运行说明
 
-- 编译并烧录 examples/screen/screen.ino
+- 编译并烧录 example/rootmaker/screen/screen.ino
 - 上电后，屏幕会显示一个红色方块和提示文字
 - 点击红色方块，方块会跳转到新的随机位置
 - 点击其他位置，可看到触摸点留下的绿色标记
@@ -25,4 +25,5 @@
 # 说明
 
 - 本例程仅启用屏幕模块，未启用 LED、传感器、按键和电池模块
+- 代码中使用 `board.maker.begin(false, false, false, false, true)` 显式启用 LCD 模块，保持外设启用风格一致
 - 若触控无响应或显示异常，请优先检查屏幕初始化、触控硬件状态以及开发板配置是否正确

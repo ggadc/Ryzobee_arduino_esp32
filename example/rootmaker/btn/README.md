@@ -16,11 +16,12 @@ This example uses the button APIs provided by this library and does not require 
 
 # Usage
 
-- Build and upload examples/btn/btn.ino
+- Build and upload example/rootmaker/btn/btn.ino
 - Open the serial monitor at 115200 baud
 - Press the onboard button and observe the reported event types in the serial output
 
 # Notes
 
 - This example only enables the button module; the display, LED, sensor, and battery modules are disabled
+- The sketch uses `board.maker.begin(false, false, true, false, false)` so the LCD module stays disabled explicitly
 - If no output appears, first verify the selected board type, serial baud rate, and button hardware status

@@ -22,7 +22,7 @@ Install the following Arduino library in the Arduino IDE before building this ex
 # Usage
 
 - Install the required dependency
-- Build and upload examples/gif/gif.ino
+- Build and upload example/rootmaker/gif/gif.ino
 - After boot, the display starts playing the embedded GIF animation automatically
 - Press the button once to switch to the next GIF
 
@@ -30,5 +30,6 @@ Install the following Arduino library in the Arduino IDE before building this ex
 
 - The GIF data is compiled into the example as byte arrays, so no extra asset files are required at runtime
 - This example enables the display and button modules, while the LED, sensor, and battery modules remain disabled
+- The sketch uses `board.maker.begin(false, false, true, false, true)` to enable the button and LCD modules explicitly
 - If playback does not behave as expected, first verify display initialization, library version compatibility, and the selected target board
 

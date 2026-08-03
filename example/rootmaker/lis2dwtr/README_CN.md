@@ -21,12 +21,13 @@
 # 运行说明
 
 - 下载并安装所需依赖库
-- 编译并烧录 examples/lis2dwtr/lis2dwtr.ino
+- 编译并烧录 example/rootmaker/lis2dwtr/lis2dwtr.ino
 - 打开串口监视器，波特率设置为 115200
 - 上电后可持续查看 X、Y、Z 三轴加速度数据输出
 
 # 说明
 
 - 本例程仅启用传感器模块，未启用屏幕、LED、按键和电池模块
+- 代码中使用 `board.maker.begin(false, true, false, false, false)` 显式关闭 LCD 模块，保持外设启用风格一致
 - 若串口无数据或数据异常，请优先检查传感器初始化是否成功、依赖库版本以及开发板连接状态
 

@@ -26,7 +26,7 @@ void setup(void)
     Serial.begin(115200);
     delay(200);
 
-    board.maker.begin(false, false, true, false);
+    board.maker.begin(false, false, true, false, false);
 
     Serial.println();
     Serial.println("RootMaker button example");

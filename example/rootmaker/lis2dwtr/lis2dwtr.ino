@@ -9,7 +9,7 @@ void setup(void)
   Serial.begin(115200);
   delay(200);
 
-  board.maker.begin(false, true, false, false);
+  board.maker.begin(false, true, false, false, false);
 
   Serial.println();
   Serial.println("RootMaker LIS2DWTR example");
