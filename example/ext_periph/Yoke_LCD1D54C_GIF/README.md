@@ -2,7 +2,7 @@
 
 [中文](./README_CN.md)
 
-This example demonstrates how to play built-in GIF animations on the Rootmaker display and switch between them with the onboard button. It is useful for validating display output, button input, and the GIF decoding and playback pipeline.
+This example demonstrates how to play built-in GIF animations on a detachable LCD1D54C display connected to RootMaker and switch between them with the onboard button. It is useful for validating display output, button input, and the GIF decoding and playback pipeline.
 
 # Features
 
@@ -13,16 +13,18 @@ This example demonstrates how to play built-in GIF animations on the Rootmaker d
 
 # Dependencies
 
-Install the following Arduino library in the Arduino IDE before building this example:
+Install the following Arduino libraries in the Arduino IDE before building this example:
 
 | Name | Version | Description |
 |---|---|---|
+| Yoke | Companion library | LCD1D54C peripheral driver |
+| LovyanGFX | >= v1.2.19 | Display graphics API |
 | [AnimatedGIF](https://github.com/bitbank2/AnimatedGIF) | >= v2.2.0 | Library for decoding and playing GIF animations on embedded devices |
 
 # Usage
 
 - Install the required dependency
-- Build and upload example/rootmaker/gif/gif.ino
+- Build and upload example/ext_periph/Yoke_LCD1D54C_GIF/Yoke_LCD1D54C_GIF.ino
 - After boot, the display starts playing the embedded GIF animation automatically
 - Press the button once to switch to the next GIF
 
@@ -30,6 +32,8 @@ Install the following Arduino library in the Arduino IDE before building this ex
 
 - The GIF data is compiled into the example as byte arrays, so no extra asset files are required at runtime
 - This example enables the display and button modules, while the LED, sensor, and battery modules remain disabled
-- The sketch uses `board.maker.begin(false, false, true, false, true)` to enable the button and LCD modules explicitly
+- Use `board.maker.begin(false, false, true, false)` to select onboard peripherals; initialize the display through a separate Yoke peripheral object.
 - If playback does not behave as expected, first verify display initialization, library version compatibility, and the selected target board
 
+
+The display is a detachable Yoke LCD1D54C peripheral. Install Yoke, LovyanGFX and AnimatedGIF. See the [LCD1D54C wiring](../Yoke_LCD1D54C/README.md).

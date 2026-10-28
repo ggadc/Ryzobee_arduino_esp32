@@ -23,5 +23,5 @@
 # 说明
 
 - 本例程仅启用按键模块，未启用屏幕、LED、传感器和电池模块
-- 代码中使用 `board.maker.begin(false, false, true, false, false)` 显式关闭 LCD 模块，保持外设启用风格一致
+- 使用 `board.maker.begin(false, false, true, false)` 选择需要启用的板载外设；屏幕通过独立的 Yoke 外设对象初始化。
 - 若串口没有输出，请优先检查开发板型号、串口波特率以及按键硬件是否正常

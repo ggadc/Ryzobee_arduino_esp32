@@ -22,5 +22,5 @@
 # 说明
 
 - 本例程仅启用 LED 外设，未启用屏幕、传感器、按键和电池模块
-- 代码中使用 `board.maker.begin(true, false, false, false, false)` 显式关闭 LCD 模块，保持外设启用风格一致
+- 使用 `board.maker.begin(true, false, false, false)` 选择需要启用的板载外设；屏幕通过独立的 Yoke 外设对象初始化。
 - 若灯效未正常显示，请优先检查开发板型号选择、供电状态以及依赖库是否正确安装

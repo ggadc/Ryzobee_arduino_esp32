@@ -45,7 +45,7 @@ In other words, the reported voltage is the measured battery voltage, while the 
 # Notes
 
 - This example requires a working PY32 battery management module on the hardware
-- The sketch uses `board.maker.begin(true, false, true, true, false)`, so the LCD module stays disabled explicitly
+- Use `board.maker.begin(true, false, true, true)` to select onboard peripherals; initialize the display through a separate Yoke peripheral object.
 - If no valid battery report appears, first check power, I2C wiring, and the slave address
 - If you want the printed voltage and percentage calculation to use the exact same data source, you can modify the example to use the filtered voltage API for reporting as well
 

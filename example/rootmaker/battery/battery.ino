@@ -94,7 +94,7 @@ void setup(void)
     Serial.begin(115200);
     delay(200);
 
-    board.maker.begin(true, false, true, true, false);
+    board.maker.begin(true, false, true, true);
 
     Serial.println();
     Serial.println("RootMaker battery monitor");

@@ -23,5 +23,5 @@ This example uses the button APIs provided by this library and does not require 
 # Notes
 
 - This example only enables the button module; the display, LED, sensor, and battery modules are disabled
-- The sketch uses `board.maker.begin(false, false, true, false, false)` so the LCD module stays disabled explicitly
+- Use `board.maker.begin(false, false, true, false)` to select onboard peripherals; initialize the display through a separate Yoke peripheral object.
 - If no output appears, first verify the selected board type, serial baud rate, and button hardware status

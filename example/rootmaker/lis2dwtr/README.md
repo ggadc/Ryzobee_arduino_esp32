@@ -28,6 +28,6 @@ Install the following Arduino library in the Arduino IDE before building this ex
 # Notes
 
 - This example only enables the sensor module; the display, LED, button, and battery modules are disabled
-- In code, the example uses `board.maker.begin(false, true, false, false, false)` so the LCD module stays disabled explicitly
+- Use `board.maker.begin(false, true, false, false)` to select onboard peripherals; initialize the display through a separate Yoke peripheral object.
 - If no data appears or the readings look invalid, first verify sensor initialization, library version compatibility, and board connection status
 

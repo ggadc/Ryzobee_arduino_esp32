@@ -13,7 +13,7 @@ void setup(void)
     Serial.begin(115200);
     delay(200);
 
-    board.maker.begin(true, false, false, false, false);
+    board.maker.begin(true, false, false, false);
 
     Serial.println();
     Serial.println("RootMaker LED example");

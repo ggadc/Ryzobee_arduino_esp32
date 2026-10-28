@@ -2,11 +2,14 @@
 
 #include "Ryzobee.h"
 #include <AnimatedGIF.h>
+#include <ryzobee_yoke.hpp>
+#include <yoke_lcd1d54c/yoke_lcd1d54c.hpp>
 
 #include "Ryzo_20fps.h"
 #include "Ryzo_25fps.h"
 
 Ryzobee board;
+Yoke_lcd1d54c lcd(&board.maker.getWire(), board.maker.getI2CMutex());
 
 AnimatedGIF gif;
 
@@ -18,7 +21,7 @@ static bool lastPressed = false;
 
 static void drawGifLine(GIFDRAW* draw)
 {
-    if (board.maker.lcd == nullptr) {
+    if (!lcd.isInitialized()) {
         return;
     }
 
@@ -27,12 +30,12 @@ static void drawGifLine(GIFDRAW* draw)
     int width = draw->iWidth;
     int y = draw->iY + draw->y;
 
-    if (y >= board.maker.lcd->height() || draw->iX >= board.maker.lcd->width()) {
+    if (y >= lcd.height() || draw->iX >= lcd.width()) {
         return;
     }
 
-    if (draw->iX + width > board.maker.lcd->width()) {
-        width = board.maker.lcd->width() - draw->iX;
+    if (draw->iX + width > lcd.width()) {
+        width = lcd.width() - draw->iX;
     }
     if (width <= 0) {
         return;
@@ -61,7 +64,7 @@ static void drawGifLine(GIFDRAW* draw)
             }
 
             if (count > 0) {
-                board.maker.lcd->pushImage(draw->iX + start, y, count, 1, lineBuffer);
+                lcd.pushImage(draw->iX + start, y, count, 1, lineBuffer);
                 start += count;
             }
         }
@@ -72,7 +75,7 @@ static void drawGifLine(GIFDRAW* draw)
         lineBuffer[index] = palette[source[index]];
     }
 
-    board.maker.lcd->pushImage(draw->iX, y, width, 1, lineBuffer);
+    lcd.pushImage(draw->iX, y, width, 1, lineBuffer);
 }
 
 static bool openCurrentGif()
@@ -80,8 +83,8 @@ static bool openCurrentGif()
     const uint8_t* gifData = currentGif == 0 ? Ryzo_20fps : Ryzo_25fps;
     uint32_t gifSize = currentGif == 0 ? sizeof(Ryzo_20fps) : sizeof(Ryzo_25fps);
 
-    if (board.maker.lcd != nullptr) {
-        board.maker.lcd->fillScreen(TFT_BLACK);
+    if (lcd.isInitialized()) {
+        lcd.fillScreen(TFT_BLACK);
     }
 
     if (!gif.open((uint8_t*)gifData, gifSize, drawGifLine)) {
@@ -98,15 +101,15 @@ void setup(void)
     Serial.begin(115200);
     delay(200);
 
-    board.maker.begin(false, false, true, false, true);
+    board.maker.begin(false, false, true, false);
 
-    if (board.maker.lcd == nullptr) {
+    if (lcd.begin(board.maker.useport("f_bus")) != YOKE_PORT_ERROR_NONE) {
         Serial.println("LCD is not available");
         return;
     }
 
-    board.maker.lcd->setBrightness(255);
-    board.maker.lcd->fillScreen(TFT_BLACK);
+    lcd.setBrightness(255);
+    lcd.fillScreen(TFT_BLACK);
     gif.begin(BIG_ENDIAN_PIXELS);
     openCurrentGif();
 
@@ -117,7 +120,7 @@ void setup(void)
 
 void loop(void)
 {
-    if (board.maker.lcd == nullptr) {
+    if (!lcd.isInitialized()) {
         delay(100);
         return;
     }
@@ -130,9 +133,9 @@ void loop(void)
         openCurrentGif();
     }
 
-    board.maker.lcd->startWrite();
+    lcd.startWrite();
     bool hasFrame = gif.playFrame(true, nullptr);
-    board.maker.lcd->endWrite();
+    lcd.endWrite();
 
     if (!hasFrame) {
         gif.reset();
