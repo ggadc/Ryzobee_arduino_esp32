@@ -2,14 +2,14 @@
 
 [English](./README.md)
 
-本例程演示如何在 Ryzobee 开发板上使用 KEYW 扩展模块（按键 + LED）。Yoke 库暂未提供 `Yoke_keyw` 类，因此本例程通过开发板的端口数据向量直接访问 RS 端口引脚。
+本例程演示如何在 Ryzobee 开发板上使用 KEYW 扩展模块（按键 + LED）。本例程使用 Yoke 库的 `Yoke_keyw` 类管理 RS 端口、按键消抖和 LED 输出。
 
 SDA → 按键输入（低电平有效，内部上拉），SCL → LED 输出（支持 PWM，`analogWrite`）。
 
 # 功能说明
 
-- 从端口数据解析引脚：`board.maker.useport("rs_portN")`
-- 下降沿中断 + 30ms 软件去抖
+- 初始化 RS 端口：`keyw.begin(board.maker.useport("rs_portN"))`
+- 轮询按键 + 30ms 软件消抖，每次循环调用 `keyw.update()`
 - 每次按下切换 LED 亮灭
 - 可通过 `LED_CONTROL` 宏切换数字开关 / PWM 亮度模式
 
@@ -34,27 +34,56 @@ Rootmaker 端口 GPIO 映射：
 | 名称 | 说明 |
 |------|------|
 | [Ryzobee](https://github.com/ggadc/Ryzobee_arduino_lib) | 开发板支持（Rootmaker） |
+| [Yoke](https://github.com/ggadc/Yoke_arduino_lib) | KEYW 外设驱动 |
 
-无需 Yoke 库（直接操作 GPIO）。
+需要安装 Yoke 库；无需额外第三方驱动库。
 
 # 快速开始
 
 ```cpp
+/*
+ * Yoke_KEYW.ino - KEYW key and LED example on an RS expansion port.
+ * Poll the debounced key and toggle the LED on each press.
+ */
+
 #define BOARD_RYZOBEE_ROOTMAKER (1)
 
 #include "Ryzobee.h"
+#include <ryzobee_yoke.hpp>
+#include <yoke_keyw/yoke_keyw.hpp>
+
+#define LED_CONTROL (1)  // 0 = digital on/off, 1 = PWM brightness
 
 Ryzobee board;
-std::vector<uint8_t>* keywPort = nullptr;
+Yoke_keyw keyw(30);  // Debounce interval in milliseconds.
+bool ledState = false;
 
 void setup() {
+    Serial.begin(115200);
     board.maker.begin();
-    keywPort = board.maker.useport("rs_port1");
-    int keyPin = keywPort->at(PORT_PIN_START);      // SDA
-    int ledPin = keywPort->at(PORT_PIN_START + 1);  // SCL
-    pinMode(keyPin, INPUT_PULLUP);
-    pinMode(ledPin, OUTPUT);
-    attachInterrupt(digitalPinToInterrupt(keyPin), onKeyPress, FALLING);
+
+    if (keyw.begin(board.maker.useport("rs_port4")) != YOKE_PORT_ERROR_NONE) {
+        Serial.println("KEYW initialization failed");
+        return;
+    }
+    Serial.println("KEYW ready on RS port 4");
+}
+
+void loop() {
+    if (!keyw.isInitialized()) {
+        delay(100);
+        return;
+    }
+    keyw.update();
+    if (keyw.wasPressed()) {
+        ledState = !ledState;
+#if LED_CONTROL
+        keyw.setLEDBrightness(ledState ? 255 : 0);
+#else
+        keyw.setLED(ledState);
+#endif
+    }
+    delay(1);
 }
 ```
 
@@ -62,4 +91,7 @@ void setup() {
 
 - 按键低电平有效，已启用内部上拉，无需外接上拉电阻
 - PWM 模式（`LED_CONTROL=1`）使用 `analogWrite`，需确保 SCL 引脚支持 PWM
-- Yoke 库后续可能会加入专用的 `Yoke_keyw` 类
+- `wasPressed()` / `wasReleased()` 读取并清除对应事件，`isPressed()` 查询消抖后的状态
+- `setLED(bool)` 控制数字开关，`setLEDBrightness(0~255)` 设置 PWM 亮度
+- `end()` 关闭 LED 并释放引脚和端口；端口数据须在此之前保持有效
+- 请频繁调用 `update()`；两次轮询之间完成的短按可能无法捕获，未消费的同类事件会合并

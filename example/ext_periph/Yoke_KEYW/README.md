@@ -2,14 +2,14 @@
 
 [中文](./README_CN.md)
 
-This example demonstrates how to use the KEYW expansion module (key + LED) on a Ryzobee board. The Yoke library does not yet provide a `Yoke_keyw` class, so this example accesses RS port pins directly via the board's port data.
+This example demonstrates how to use the KEYW expansion module (key + LED) on a Ryzobee board. It uses the Yoke library's `Yoke_keyw` class for RS port management, key debounce, and LED output.
 
 SDA → key input (active LOW, internal pull-up), SCL → LED output (PWM-capable via `analogWrite`).
 
 # Features
 
-- Resolve pins from port data: `board.maker.useport("rs_portN")`
-- Falling-edge interrupt with 30 ms software debounce
+- Initialize an RS port: `keyw.begin(board.maker.useport("rs_portN"))`
+- Polled input with 30 ms software debounce; call `keyw.update()` each loop
 - Toggle LED on each key press
 - Switchable digital on/off or PWM brightness mode (`LED_CONTROL` define)
 
@@ -34,27 +34,56 @@ Rootmaker GPIO mapping:
 | Library | Description |
 |---------|-------------|
 | [Ryzobee](https://github.com/ggadc/Ryzobee_arduino_lib) | Board support (Rootmaker) |
+| [Yoke](https://github.com/ggadc/Yoke_arduino_lib) | KEYW peripheral driver |
 
-No Yoke library required (raw GPIO access).
+Install the Yoke library; no additional third-party driver library is required.
 
 # Quick Start
 
 ```cpp
+/*
+ * Yoke_KEYW.ino - KEYW key and LED example on an RS expansion port.
+ * Poll the debounced key and toggle the LED on each press.
+ */
+
 #define BOARD_RYZOBEE_ROOTMAKER (1)
 
 #include "Ryzobee.h"
+#include <ryzobee_yoke.hpp>
+#include <yoke_keyw/yoke_keyw.hpp>
+
+#define LED_CONTROL (1)  // 0 = digital on/off, 1 = PWM brightness
 
 Ryzobee board;
-std::vector<uint8_t>* keywPort = nullptr;
+Yoke_keyw keyw(30);  // Debounce interval in milliseconds.
+bool ledState = false;
 
 void setup() {
+    Serial.begin(115200);
     board.maker.begin();
-    keywPort = board.maker.useport("rs_port1");
-    int keyPin = keywPort->at(PORT_PIN_START);      // SDA
-    int ledPin = keywPort->at(PORT_PIN_START + 1);  // SCL
-    pinMode(keyPin, INPUT_PULLUP);
-    pinMode(ledPin, OUTPUT);
-    attachInterrupt(digitalPinToInterrupt(keyPin), onKeyPress, FALLING);
+
+    if (keyw.begin(board.maker.useport("rs_port4")) != YOKE_PORT_ERROR_NONE) {
+        Serial.println("KEYW initialization failed");
+        return;
+    }
+    Serial.println("KEYW ready on RS port 4");
+}
+
+void loop() {
+    if (!keyw.isInitialized()) {
+        delay(100);
+        return;
+    }
+    keyw.update();
+    if (keyw.wasPressed()) {
+        ledState = !ledState;
+#if LED_CONTROL
+        keyw.setLEDBrightness(ledState ? 255 : 0);
+#else
+        keyw.setLED(ledState);
+#endif
+    }
+    delay(1);
 }
 ```
 
@@ -62,4 +91,7 @@ void setup() {
 
 - Key is active LOW with internal pull-up — no external pull-up needed
 - PWM mode (`LED_CONTROL=1`) uses `analogWrite`; ensure the SCL pin supports PWM
-- A dedicated `Yoke_keyw` class may be added to the Yoke library in the future
+- `wasPressed()` / `wasReleased()` consume the corresponding event; `isPressed()` reads the debounced state
+- `setLED(bool)` controls digital output; `setLEDBrightness(0~255)` controls PWM brightness
+- `end()` turns off the LED and releases the pins and port; keep the port data valid until then
+- Call `update()` frequently; presses completed between polls may be missed, and unread events of the same kind coalesce

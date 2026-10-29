@@ -29,8 +29,9 @@ LCD1D54C 屏幕、MOTO 电机模块、RGBW 灯光模块等均为可拆卸外设�
 | MOTO 电机模块 | `Yoke_moto` | `rs_port1`～`rs_port4` | [Yoke_MOTO](../../../example/ext_periph/Yoke_MOTO) |
 | MOTO-A 电机模块 | `Yoke_moto_a` | `f_bus` | [Yoke_MOTO_A](../../../example/ext_periph/Yoke_MOTO_A) |
 | RGBW 灯光模块 | `Yoke_rgbw` | `rs_port1`～`rs_port4` | [Yoke_RGBW](../../../example/ext_periph/Yoke_RGBW) |
-| KEYW 按键模块 | 见示例 | RS 端口 | [Yoke_KEYW](../../../example/ext_periph/Yoke_KEYW) |
+| KEYW 按键模块 | `Yoke_keyw` | RS 端口 | [Yoke_KEYW](../../../example/ext_periph/Yoke_KEYW) |
 | RAD60 雷达模块 | `Yoke_rad60` | `rs_port1`～`rs_port4` | [Yoke_RAD60](../../../example/ext_periph/Yoke_RAD60) |
+| TOUCH4 四通道触摸 | `Yoke_touch4` | RS 端口（UART） | [Yoke_TOUCH4](../../../example/ext_periph/Yoke_TOUCH4) |
 
 先安装 Yoke 库，并在应用中包含对应的外设头文件。屏幕还需要 LovyanGFX，GIF 播放需要 AnimatedGIF；具体接线和配置见对应示例。
 

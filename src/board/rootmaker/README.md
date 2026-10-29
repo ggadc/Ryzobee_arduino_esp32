@@ -29,8 +29,9 @@ The LCD1D54C display, MOTO motor module, RGBW lighting module, and other expansi
 | MOTO motor module | `Yoke_moto` | `rs_port1` through `rs_port4` | [Yoke_MOTO](../../../example/ext_periph/Yoke_MOTO) |
 | MOTO-A motor module | `Yoke_moto_a` | `f_bus` | [Yoke_MOTO_A](../../../example/ext_periph/Yoke_MOTO_A) |
 | RGBW lighting module | `Yoke_rgbw` | `rs_port1` through `rs_port4` | [Yoke_RGBW](../../../example/ext_periph/Yoke_RGBW) |
-| KEYW button module | See example | RS port | [Yoke_KEYW](../../../example/ext_periph/Yoke_KEYW) |
+| KEYW button module | `Yoke_keyw` | RS port | [Yoke_KEYW](../../../example/ext_periph/Yoke_KEYW) |
 | RAD60 radar module | `Yoke_rad60` | `rs_port1` through `rs_port4` | [Yoke_RAD60](../../../example/ext_periph/Yoke_RAD60) |
+| TOUCH4 four-channel touch | `Yoke_touch4` | RS port (UART) | [Yoke_TOUCH4](../../../example/ext_periph/Yoke_TOUCH4) |
 
 Install Yoke and include the appropriate peripheral header in your application. Displays also require LovyanGFX; GIF playback requires AnimatedGIF. Refer to each example for wiring and configuration.
 

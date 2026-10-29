@@ -1,70 +1,44 @@
 /*
- * Yoke_KEYW.ino — KEYW module example (key + LED)
- *
- * Note: The Yoke library does not yet provide a Yoke_keyw class.
- * This example accesses RS port pins directly via the Ryzobee board's
- * port data vector. SDA → key input (active LOW, internal pull-up),
- * SCL → LED output (PWM-capable).
- *
- * Hardware: KEYW module on a Rootmaker RS expansion port
+ * Yoke_KEYW.ino - KEYW key and LED example on an RS expansion port.
+ * Poll the debounced key and toggle the LED on each press.
  */
 
 #define BOARD_RYZOBEE_ROOTMAKER (1)
 
 #include "Ryzobee.h"
+#include <ryzobee_yoke.hpp>
+#include <yoke_keyw/yoke_keyw.hpp>
 
-// ==== LED control mode ====
 #define LED_CONTROL (1)  // 0 = digital on/off, 1 = PWM brightness
 
 Ryzobee board;
-
-// ==== Port data (acquired from board at setup) ====
-std::vector<uint8_t>* keywPort = nullptr;
-
-volatile bool pressFlag = false;
+Yoke_keyw keyw(30);  // Debounce interval in milliseconds.
 bool ledState = false;
-unsigned long lastDebounceTime = 0;
-const unsigned long debounceDelay = 30;
 
 void setup() {
     Serial.begin(115200);
     board.maker.begin();
 
-    // ==== Resolve KEYW pins from RS port data ====
-    // port vector layout: [type, used, invalid, pinCount, pin1(SDA), pin2(SCL)]
-    keywPort = board.maker.useport("rs_port4");
-    int keyPin = keywPort->at(PORT_PIN_START);      // SDA → key input
-    int ledPin = keywPort->at(PORT_PIN_START + 1);  // SCL → LED output
-
-    pinMode(keyPin, INPUT_PULLUP);
-    pinMode(ledPin, OUTPUT);
-    digitalWrite(ledPin, LOW);
-
-    Serial.printf("KEYW ready: key=GPIO%d led=GPIO%d\n", keyPin, ledPin);
-
-    attachInterrupt(digitalPinToInterrupt(keyPin), onKeyPress, FALLING);
+    if (keyw.begin(board.maker.useport("rs_port4")) != YOKE_PORT_ERROR_NONE) {
+        Serial.println("KEYW initialization failed");
+        return;
+    }
+    Serial.println("KEYW ready on RS port 4");
 }
 
 void loop() {
-    if (pressFlag) {
-        unsigned long now = millis();
-        if (now - lastDebounceTime >= debounceDelay) {
-            int keyPin = keywPort->at(PORT_PIN_START);
-            if (digitalRead(keyPin) == LOW) {
-                ledState = !ledState;
-                int ledPin = keywPort->at(PORT_PIN_START + 1);
-#if LED_CONTROL
-                analogWrite(ledPin, ledState ? 255 : 0);
-#else
-                digitalWrite(ledPin, ledState ? HIGH : LOW);
-#endif
-            }
-            pressFlag = false;
-        }
+    if (!keyw.isInitialized()) {
+        delay(100);
+        return;
     }
-}
-
-void onKeyPress() {
-    pressFlag = true;
-    lastDebounceTime = millis();
+    keyw.update();
+    if (keyw.wasPressed()) {
+        ledState = !ledState;
+#if LED_CONTROL
+        keyw.setLEDBrightness(ledState ? 255 : 0);
+#else
+        keyw.setLED(ledState);
+#endif
+    }
+    delay(1);
 }
