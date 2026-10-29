@@ -21,11 +21,11 @@ See [example/rootmaker](../../../example/rootmaker) for onboard peripheral examp
 
 ## Supported Yoke peripherals
 
-The LCD1D54C display, MOTO motor module, RGBW lighting module, and other expansion modules are detachable peripherals with drivers provided by the companion Yoke library. Applications create these objects separately and initialize them with `peripheral.begin(board.maker.useport("port_name"))`. They are not members of `board.maker` and are not initialized automatically with the board.
+The LCD1D54C display, MOTO motor module, RGBW lighting module, and other expansion modules are detachable peripherals with drivers provided by the companion Yoke library. Applications create these objects separately and initialize them with `peripheral.begin(board.maker.useport("port_name"))` or, for displays, `lcd.begin(pins)`. They are not members of `board.maker` and are not initialized automatically with the board.
 
 | Peripheral | Yoke class | Port | Examples |
 | --- | --- | --- | --- |
-| LCD1D54C display and touch | `Yoke_lcd1d54c` | `f_bus` | [Touch interaction](../../../example/ext_periph/Yoke_LCD1D54C), [GIF playback](../../../example/ext_periph/Yoke_LCD1D54C_GIF) |
+| LCD1D54C display and touch | `Yoke_lcd1d54c` | GPIO (`Lcd1d54cPins`) | [Touch interaction](../../../example/ext_periph/Yoke_LCD1D54C), [GIF playback](../../../example/ext_periph/Yoke_LCD1D54C_GIF) |
 | MOTO motor module | `Yoke_moto` | `rs_port1` through `rs_port4` | [Yoke_MOTO](../../../example/ext_periph/Yoke_MOTO) |
 | MOTO-A motor module | `Yoke_moto_a` | `f_bus` | [Yoke_MOTO_A](../../../example/ext_periph/Yoke_MOTO_A) |
 | RGBW lighting module | `Yoke_rgbw` | `rs_port1` through `rs_port4` | [Yoke_RGBW](../../../example/ext_periph/Yoke_RGBW) |
@@ -47,6 +47,8 @@ Install Yoke and include the appropriate peripheral header in your application. 
 
 See [rootmaker_pin.h](rootmaker_pin.h) for complete GPIO mappings. The peripheral determines the communication protocol on an RS port; signal names alone do not imply I2C.
 
-S_BUS and F_BUS share some GPIOs with RS ports and onboard functions. Check pin assignments before combining modules. The current port interface does not split F_BUS into individual pin allocations; initialize only one peripheral on `f_bus`, such as the display or MOTO-A.
+S_BUS and F_BUS share some GPIOs with RS ports and onboard functions. Check pin assignments before combining modules. The current port interface does not split F_BUS into individual pin allocations. The display accepts GPIO configuration only and does not reserve or check the `f_bus` port; applications must check actual pin assignments and hardware connections when combining it with peripherals such as MOTO-A.
 
 Display touch shares I2C with onboard sensors. The display examples pass `&board.maker.getWire()` and `board.maker.getI2CMutex()` to the driver to reuse the bus and mutex. Initialize the board before the display and keep the board object alive longer than the display object.
+
+Other ESP32 boards can provide a `Lcd1d54cPins` GPIO configuration and call `lcd.begin(pins)` without following the RootMaker F_BUS layout. See the [custom GPIO example](../../../example/ext_periph/Yoke_LCD1D54C/README.md).

@@ -47,7 +47,7 @@ public:
     uint8_t isPressed(void) { return _state == 0 ? 0 : 1;}
     uint8_t isReleased(void) { return _state == 0 ? 1 : 0;}
     
-    // TODO 测试这两个功能
+    // TODO Test these two features.
     // uint8_t wasPressed(void) { return _state && _changed; }
     // uint8_t wasReleased(void) { return !_state && _changed && millis() - _pressTime < _hold_time;}
 

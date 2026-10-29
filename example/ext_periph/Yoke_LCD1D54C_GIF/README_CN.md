@@ -36,3 +36,5 @@
 - 若动画显示异常，请优先检查屏幕初始化、依赖库版本以及编译目标板是否正确
 
 屏幕为可拆卸的 Yoke LCD1D54C 外设，请安装 Yoke、LovyanGFX 和 AnimatedGIF。接线参考 [LCD1D54C 示例](../Yoke_LCD1D54C/README_CN.md)。
+
+屏幕现在使用 `Lcd1d54cPins` 和 `lcd.begin(pins)` 显式配置 GPIO，数值以 RootMaker 接线为例。示例仍使用 Ryzobee 的板载按键和共享 I2C 总线；若更换其他款式的 ESP32 开发板，需同时适配按键和总线初始化。GPIO 入口不占用 F_BUS 端口，由应用协调引脚资源。

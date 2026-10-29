@@ -10,8 +10,8 @@ This example demonstrates the AT6010 (RAD60) mmWave radar sensor on a Ryzobee bo
 - UART specified via constructor: `Yoke_rad60 radar(UART_NUM_1, 115200)`
 - Wake ULP radar: `radar.enterCommunicationMode(true)`
 - Apply default detection config (motion + breath): `radar.applyDefaultConfig()`
-- Real-time multi-target tracking (up to 2 targets): `radar.update()`
-- Distance, angle, velocity, and ID per target
+- Single-target output (the first target in each report): `radar.update()`
+- Distance (cm), angle (degrees), velocity (cm/s), and ID for one target
 - Vacancy / communication health monitoring: `isDetected()`, `isConnected()`
 
 # Hardware
@@ -64,7 +64,7 @@ void loop() {
     if (radar.isDetected()) {
         Serial.printf("Targets: %d, dist: %d cm\n",
                       radar.getTargetCount(),
-                      radar.getTargetDistance(0));
+                      radar.getTargetDistance());
     }
     delay(50);
 }
@@ -76,3 +76,5 @@ void loop() {
 - Must wait ~2s after power-on before sending commands
 - Communication baud rate is fixed at 115200
 - Protocol: 0x58 send / 0x59 response / 0x5A auto-report frames
+
+The driver still receives `TYPE=0x0A` multi-target reports and parses 8-byte target records, caching only the first target. `getTargetCount()` returns 0 or 1. This does not change the module algorithm or guarantee the same target ID across frames. Getters accept an omitted index, such as `getTargetDistance()`; nonzero indices return 0. Incomplete reports are ignored; empty reports or timeouts clear the count.

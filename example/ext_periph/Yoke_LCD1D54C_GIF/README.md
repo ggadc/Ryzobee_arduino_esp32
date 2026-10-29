@@ -37,3 +37,5 @@ Install the following Arduino libraries in the Arduino IDE before building this 
 
 
 The display is a detachable Yoke LCD1D54C peripheral. Install Yoke, LovyanGFX and AnimatedGIF. See the [LCD1D54C wiring](../Yoke_LCD1D54C/README.md).
+
+The display now uses `Lcd1d54cPins` and `lcd.begin(pins)` with explicit GPIOs illustrating RootMaker wiring. This example still uses the Ryzobee onboard button and shared I2C bus; other ESP32 boards also require adapting button and bus initialization. The GPIO entry point does not reserve F_BUS; the application coordinates pin resources.

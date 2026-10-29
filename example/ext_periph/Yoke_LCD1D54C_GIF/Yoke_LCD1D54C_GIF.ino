@@ -103,7 +103,20 @@ void setup(void)
 
     board.maker.begin(false, false, true, false);
 
-    if (lcd.begin(board.maker.useport("f_bus")) != YOKE_PORT_ERROR_NONE) {
+    // These GPIOs illustrate RootMaker wiring; adjust them to the actual wiring on other ESP32 boards.
+    Lcd1d54cPins pins;
+    pins.sclk = 12;
+    pins.mosi = 9;
+    pins.dc = 3;
+    pins.cs = 5;
+    pins.rst = 10;
+    pins.bl = 7;
+    pins.touch_sda = 41;
+    pins.touch_scl = 40;
+    pins.touch_rst = 2;
+    pins.touch_int = 1;
+
+    if (lcd.begin(pins) != YOKE_PORT_ERROR_NONE) {
         Serial.println("LCD is not available");
         return;
     }

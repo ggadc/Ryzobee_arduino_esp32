@@ -10,8 +10,8 @@
 - 构造时指定 UART：`Yoke_rad60 radar(UART_NUM_1, 115200)`
 - 唤醒 ULP 雷达：`radar.enterCommunicationMode(true)`
 - 应用默认检测配置（移动 + 呼吸）：`radar.applyDefaultConfig()`
-- 实时多目标追踪（最多 2 个）：`radar.update()`
-- 每目标输出距离、角度、速度、ID
+- 单目标输出（每帧仅保留上报顺序中的第一个目标）：`radar.update()`
+- 输出一个目标的距离（cm）、角度（度）、速度（cm/s）和 ID
 - 空闲/通信健康监控：`isDetected()`, `isConnected()`
 
 # 硬件连接
@@ -64,7 +64,7 @@ void loop() {
     if (radar.isDetected()) {
         Serial.printf("目标数: %d, 距离: %d cm\n",
                       radar.getTargetCount(),
-                      radar.getTargetDistance(0));
+                      radar.getTargetDistance());
     }
     delay(50);
 }
@@ -76,3 +76,5 @@ void loop() {
 - 上电后需等待约 2 秒再发送命令
 - 通信波特率固定 115200
 - 协议：0x58 发送帧 / 0x59 响应帧 / 0x5A 自动上报帧
+
+驱动仍接收 `TYPE=0x0A` 多目标上报，按协议的 8 字节目标记录解析，只缓存第一个目标；`getTargetCount()` 返回 0 或 1。此方式不切换模块算法，也不保证跨帧始终选择同一个 ID。读取接口可省略索引，例如 `getTargetDistance()`；显式传入非零索引返回 0。不完整上报会被忽略，无目标或超时后数量为 0。

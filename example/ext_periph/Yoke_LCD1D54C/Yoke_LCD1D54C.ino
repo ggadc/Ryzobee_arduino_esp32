@@ -1,11 +1,7 @@
-#define BOARD_RYZOBEE_ROOTMAKER (1)
-
-#include "Ryzobee.h"
 #include <ryzobee_yoke.hpp>
 #include <yoke_lcd1d54c/yoke_lcd1d54c.hpp>
 
-Ryzobee board;
-Yoke_lcd1d54c lcd(&board.maker.getWire(), board.maker.getI2CMutex());
+Yoke_lcd1d54c lcd;
 
 #define CUBE_WIDTH 40
 
@@ -13,7 +9,7 @@ static long cubeX = (YOKE_LCD1D54C_SIZE - CUBE_WIDTH) / 2;
 static long cubeY = (YOKE_LCD1D54C_SIZE - CUBE_WIDTH) / 2;
 
 /**
- * @brief 绘制红色方块和点击提示。
+ * @brief Draw the red square and tap prompt.
  */
 static void drawScene()
 {
@@ -30,9 +26,20 @@ void setup(void)
 
     randomSeed(micros());
 
-    board.maker.begin(false, false, false, false);
+    // These GPIOs illustrate RootMaker wiring; adjust them to the actual wiring on other ESP32 boards.
+    Lcd1d54cPins pins;
+    pins.sclk = 12;
+    pins.mosi = 9;
+    pins.dc = 3;
+    pins.cs = 5;
+    pins.rst = 10;
+    pins.bl = 7;
+    pins.touch_sda = 41;
+    pins.touch_scl = 40;
+    pins.touch_rst = 2;
+    pins.touch_int = 1;
 
-    if (lcd.begin(board.maker.useport("f_bus")) != YOKE_PORT_ERROR_NONE) {
+    if (lcd.begin(pins) != YOKE_PORT_ERROR_NONE) {
         Serial.println("LCD is not available");
         return;
     }

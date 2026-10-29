@@ -40,12 +40,12 @@ public:
     std::string getBoardInfo() override { return "RootMaker board"; }   
     void begin() override { begin(true, true, true, true); }
     /**
-     * @brief 初始化开发板及选定的板载外设。
+     * @brief Initialize the board and selected onboard peripherals.
      *
-     * @param LEDEnable 是否启用板载 LED。
-     * @param SensorEnable 是否启用板载加速度传感器。
-     * @param ButtonEnable 是否启用板载按键。
-     * @param BatteryEnable 是否启用电池检测。
+     * @param LEDEnable Whether to enable the onboard LED.
+     * @param SensorEnable Whether to enable the onboard accelerometer.
+     * @param ButtonEnable Whether to enable the onboard button.
+     * @param BatteryEnable Whether to enable battery monitoring.
      */
     void begin(bool LEDEnable, bool SensorEnable, bool ButtonEnable, bool BatteryEnable) {
         ESP_LOGI("rootmaker", "CPU Freq: %lu Hz", getCpuFrequencyMhz() * 1000000UL);
@@ -70,9 +70,9 @@ public:
     }
     TwoWire& getWire() { return _dev_i2c; }
     /**
-     * @brief 获取板载共享 I2C 互斥锁的地址，供外设驱动复用。
+     * @brief Get the address of the shared board I2C mutex for peripheral drivers.
      *
-     * @return 互斥锁句柄地址，生命周期与开发板对象一致。
+     * @return Address of the mutex handle, valid for the lifetime of the board object.
      */
     SemaphoreHandle_t* getI2CMutex() { return &_i2c_mutex; }
 public:

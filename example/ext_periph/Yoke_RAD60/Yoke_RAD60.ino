@@ -3,7 +3,7 @@
  *
  * Uses the Yoke library's Yoke_rad60 class (RS port, UART-based).
  * SDA → TX, SCL → RX. Baud rate fixed at 115200.
- * Reports multi-target distance, angle, velocity, and ID.
+ * Reports the first target only: distance, angle, velocity, and ID.
  */
 
 #define BOARD_RYZOBEE_ROOTMAKER (1)
@@ -70,17 +70,12 @@ void loop() {
             if (++n % 10 == 0) Serial.println("[RAD] Monitoring... (vacant)");
             return;
         }
-        uint8_t n = radar.getTargetCount();
         Serial.println("--- Target detected ---");
-        Serial.printf("  Count: %d\n", n);
-        for (uint8_t i = 0; i < n; i++) {
-            Serial.printf("  T%d: dist=%d cm angle=%d deg vel=%d m/s id=%d\n",
-                          i + 1,
-                          radar.getTargetDistance(i),
-                          radar.getTargetAngle(i),
-                          radar.getTargetVelocity(i),
-                          radar.getTargetID(i));
-        }
+        Serial.printf("  dist=%u cm angle=%d deg vel=%d cm/s id=%u\n",
+                      radar.getTargetDistance(),
+                      radar.getTargetAngle(),
+                      radar.getTargetVelocity(),
+                      radar.getTargetID());
         Serial.println("-----------------------");
     }
 

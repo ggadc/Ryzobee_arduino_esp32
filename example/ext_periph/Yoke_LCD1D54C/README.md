@@ -11,10 +11,10 @@ Uses a 240×240 ST7789 display and CST816T touch controller.
 
 ## Usage
 
-Install Ryzobee, Yoke and LovyanGFX, then build and upload `Yoke_LCD1D54C.ino`.
-The example uses `lcd.begin(board.maker.useport("f_bus"))`, which returns `YOKE_PORT_ERROR_NONE` on successful initialization.
-LCD1D54C is a detachable peripheral created and initialized separately by the example; do not use other peripherals on the same F_BUS at the same time.
-Touch input reuses `getWire()` and `getI2CMutex()`; keep the board object alive longer than the lcd object.
+Install Yoke and LovyanGFX, then build and upload `Yoke_LCD1D54C.ino`.
+The example specifies actual GPIOs with `Lcd1d54cPins` and calls `lcd.begin(pins)`, which returns `YOKE_PORT_ERROR_NONE` on successful initialization.
+LCD1D54C is a detachable peripheral created and initialized separately by the example, without a Ryzobee board class.
+By default, the driver uses `Wire` and initializes the touch I2C bus. The table illustrates RootMaker wiring; change the GPIOs in `setup()` for other ESP32 boards. All pins must be valid and distinct; every pin except touch INT must support output.
 
 | Signal | F_BUS Pin | RootMaker GPIO |
 | --- | --- | --- |
@@ -29,5 +29,7 @@ Touch input reuses `getWire()` and `getI2CMutex()`; keep the board object alive 
 | TP SDA | 23 | 41 |
 | TP SCL | 24 | 40 |
 
-`lcd` inherits the LovyanGFX graphics interface and supports `setBrightness()`, `fillRect()`, `drawString()` and `getTouch(&x, &y)`; `lcd.end()` turns off the backlight and releases the port.
-`board.maker.begin()` initializes onboard peripherals only; its four-parameter version controls the LED, sensor, button and battery monitoring, in that order. The display driver is provided by Yoke.
+`lcd` inherits the LovyanGFX graphics interface and supports `setBrightness()`, `fillRect()`, `drawString()` and `getTouch(&x, &y)`; `lcd.end()` turns off the backlight and releases the SPI bus, keeping the shared I2C bus active.
+GPIO initialization does not reserve a Ryzobee port; the application coordinates pins. To share an initialized I2C bus, pass a `TwoWire*` and a mutex handle address to the constructor, and keep both resources alive longer than lcd.
+
+The driver accepts actual GPIO configuration through `lcd.begin(pins)` only, without F_BUS port initialization or fixed connector mappings. F_BUS pins in the table describe the physical RootMaker wiring only.
