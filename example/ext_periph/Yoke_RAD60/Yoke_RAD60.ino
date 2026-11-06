@@ -15,7 +15,7 @@
 #define PRINT_INTERVAL_MS  200
 
 Ryzobee board;
-Yoke_rad60 radar();        // UART1, 115200 baud
+Yoke_rad60 radar(UART_NUM_1, 115200);        // UART1, 115200 baud
 
 uint32_t last_print_ms = 0;
 bool     last_detected  = false;
@@ -25,22 +25,35 @@ void setup() {
     delay(500);
     Serial.println("=== RAD60 mmWave radar ===");
 
-    // Initialize UART and the radar on RS port 4 (TX=GPIO17, RX=GPIO18).
-    if (radar.begin(board.maker.useport("rs_port4")) != YOKE_PORT_ERROR_NONE) {
-        Serial.println("[FATAL] Radar initialization failed; check wiring and power");
-        return;
+    board.maker.begin();
+
+    // Init radar on RS port 4 (SDA=TX=GPIO17, SCL=RX=GPIO18)
+    radar.begin(board.maker.useport("rs_port4"));
+
+    Serial.println("[RAD] Waiting for radar startup (2s)...");
+    delay(2000);
+
+    Serial.println("[RAD] Trying communication mode...");
+    radar.enterCommunicationMode(true);
+    delay(200);
+
+    Serial.println("[RAD] Testing communication...");
+    uint8_t state = 0xFF;
+    if (radar.getRadarState(&state)) {
+        Serial.printf("[RAD] OK (state: 0x%02X)\n", state);
+    } else {
+        Serial.println("[FATAL] No response — check wiring/power!");
+        while (1) { delay(1000); }
     }
+
+    Serial.println("[RAD] Applying default config...");
+    radar.applyDefaultConfig();
 
     Serial.println("[SYS] Data acquisition started...");
     Serial.println("----------------------------------------");
 }
 
 void loop() {
-    if (!radar.isInitialized()) {
-        delay(100);
-        return;
-    }
-
     radar.update();
 
     bool detected = radar.isDetected();
