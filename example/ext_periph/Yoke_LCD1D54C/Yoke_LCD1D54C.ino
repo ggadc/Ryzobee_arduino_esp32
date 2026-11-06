@@ -1,7 +1,11 @@
+#define BOARD_RYZOBEE_ROOTMAKER (1)
+
+#include "Ryzobee.h"
 #include <ryzobee_yoke.hpp>
 #include <yoke_lcd1d54c/yoke_lcd1d54c.hpp>
 
-Yoke_lcd1d54c lcd;
+Ryzobee board;
+Yoke_lcd1d54c lcd(&board.maker.getWire(), board.maker.getI2CMutex());
 
 #define CUBE_WIDTH 40
 
@@ -24,22 +28,10 @@ void setup(void)
     Serial.begin(115200);
     delay(200);
 
+    board.maker.begin(false, false, false, false);
     randomSeed(micros());
 
-    // These GPIOs illustrate RootMaker wiring; adjust them to the actual wiring on other ESP32 boards.
-    Lcd1d54cPins pins;
-    pins.sclk = 12;
-    pins.mosi = 9;
-    pins.dc = 3;
-    pins.cs = 5;
-    pins.rst = 10;
-    pins.bl = 7;
-    pins.touch_sda = 41;
-    pins.touch_scl = 40;
-    pins.touch_rst = 2;
-    pins.touch_int = 1;
-
-    if (lcd.begin(pins) != YOKE_PORT_ERROR_NONE) {
+    if (lcd.begin(board.maker.useport("f_bus")) != YOKE_PORT_ERROR_NONE) {
         Serial.println("LCD is not available");
         return;
     }
