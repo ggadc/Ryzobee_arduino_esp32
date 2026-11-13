@@ -10,13 +10,22 @@
 
 Ryzobee board;
 Yoke_touch4 touch(UART_NUM_1);
-uint32_t lastErrorPrint = 0;
 bool readFailed = false;
 
 void setup() {
     Serial.begin(115200);
-    if (touch.begin(board.maker.useport("rs_port4")) != YOKE_PORT_ERROR_NONE) {
-        Serial.println("TOUCH4 initialization failed; check wiring and power");
+    delay(500);
+    // begin() initializes the module and starts background polling.
+    // Use begin(port, false, config) for manual polling with custom settings.
+    auto* port = board.maker.useport("rs_port4");
+    if (port == nullptr || port->size() < PORT_PIN_START + 2) {
+        Serial.println("TOUCH4 RS port 4 is unavailable");
+        return;
+    }
+    Touch4Config config;
+    int result = touch.begin(port, true, config);
+    if (result != YOKE_PORT_ERROR_NONE) {
+        Serial.printf("TOUCH4 initialization failed: %d\n", result);
         return;
     }
     Serial.printf("TOUCH4 firmware: 0x%04X\n", touch.getFirmwareVersion());
@@ -27,11 +36,10 @@ void loop() {
         delay(100);
         return;
     }
-    touch.update();
+    delay(1);
     if (!touch.isConnected()) {
-        if (!readFailed || millis() - lastErrorPrint >= 5000) {
+        if (!readFailed) {
             Serial.println("TOUCH4 read timeout");
-            lastErrorPrint = millis();
         }
         readFailed = true;
         return;
@@ -48,5 +56,4 @@ void loop() {
             Serial.printf("Channel %u released\n", channel + 1);
         }
     }
-    delay(1);
 }
